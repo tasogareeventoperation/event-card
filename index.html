@@ -346,11 +346,14 @@
           const canvasRef = useRef(null);
           const setupCanvasRef = useRef(null);
 
+          const [isDistributionMode, setIsDistributionMode] = useState(false);
+
           useEffect(() => {
             const params = new URLSearchParams(window.location.search);
             const configUrlParam = params.get('config');
             
             if (configUrlParam) {
+              setIsDistributionMode(true);
               fetch(configUrlParam)
                 .then(response => response.json())
                 .then(data => {
@@ -816,28 +819,30 @@
             <div className="container">
               <div className="header-card">
                 <h1 className="title">参加表明カード生成システム</h1>
-                <div className="mode-buttons">
-                  <button
-                    onClick={() => setMode('setup')}
-                    className="mode-button"
-                    style={{ 
-                      backgroundColor: mode === 'setup' ? '#08224A' : '#E7D7C9',
-                      color: mode === 'setup' ? '#ffffff' : '#361403'
-                    }}
-                  >
-                    ⚙️ 設定モード(主催者用)
-                  </button>
-                  <button
-                    onClick={() => setMode('user')}
-                    className="mode-button"
-                    style={{ 
-                      backgroundColor: mode === 'user' ? '#361403' : '#E7D7C9',
-                      color: mode === 'user' ? '#ffffff' : '#361403'
-                    }}
-                  >
-                    👤 利用モード(参加者用)
-                  </button>
-                </div>
+                {!isDistributionMode && (
+                  <div className="mode-buttons">
+                    <button
+                      onClick={() => setMode('setup')}
+                      className="mode-button"
+                      style={{ 
+                        backgroundColor: mode === 'setup' ? '#08224A' : '#E7D7C9',
+                        color: mode === 'setup' ? '#ffffff' : '#361403'
+                      }}
+                    >
+                      ⚙️ 設定モード(主催者用)
+                    </button>
+                    <button
+                      onClick={() => setMode('user')}
+                      className="mode-button"
+                      style={{ 
+                        backgroundColor: mode === 'user' ? '#361403' : '#E7D7C9',
+                        color: mode === 'user' ? '#ffffff' : '#361403'
+                      }}
+                    >
+                      👤 利用モード(参加者用)
+                    </button>
+                  </div>
+                )}
               </div>
 
               {mode === 'setup' ? (
