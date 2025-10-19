@@ -148,6 +148,13 @@
             padding: 16px;
             margin-bottom: 16px;
         }
+        .warning-box {
+            background-color: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 6px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
         .map-item {
             padding: 16px;
             border: 2px solid #E7D7C9;
@@ -212,11 +219,6 @@
             align-items: center;
             margin-bottom: 12px;
         }
-        .icon {
-            width: 20px;
-            height: 20px;
-            display: inline-block;
-        }
         input[type="file"] {
             font-size: 14px;
         }
@@ -263,15 +265,15 @@
           ];
 
           const [mode, setMode] = useState('setup');
-          const [configUrl, setConfigUrl] = useState('');
+          const [baseUrl, setBaseUrl] = useState('');
           const [showUrlGenerator, setShowUrlGenerator] = useState(false);
           
           const [maps, setMaps] = useState([
-            { id: 'map1', name: 'マップ1', templateImage: null, spacePositions: {} },
-            { id: 'map2', name: 'マップ2', templateImage: null, spacePositions: {} },
-            { id: 'map3', name: 'マップ3', templateImage: null, spacePositions: {} },
-            { id: 'map4', name: 'マップ4', templateImage: null, spacePositions: {} },
-            { id: 'map5', name: 'マップ5', templateImage: null, spacePositions: {} }
+            { id: 'map1', name: 'マップ1', templateImageUrl: '', spacePositions: {} },
+            { id: 'map2', name: 'マップ2', templateImageUrl: '', spacePositions: {} },
+            { id: 'map3', name: 'マップ3', templateImageUrl: '', spacePositions: {} },
+            { id: 'map4', name: 'マップ4', templateImageUrl: '', spacePositions: {} },
+            { id: 'map5', name: 'マップ5', templateImageUrl: '', spacePositions: {} }
           ]);
           const [currentMapId, setCurrentMapId] = useState('map1');
           
@@ -345,7 +347,6 @@
           
           const canvasRef = useRef(null);
           const setupCanvasRef = useRef(null);
-
           const [isDistributionMode, setIsDistributionMode] = useState(false);
 
           useEffect(() => {
@@ -426,17 +427,8 @@
             setMaps(maps.map(m => m.id === id ? { ...m, name: newName } : m));
           };
 
-          const handleMapTemplateUpload = (mapId, e) => {
-            const file = e.target.files[0];
-            if (file) {
-              const reader = new FileReader();
-              reader.onload = (event) => {
-                setMaps(maps.map(m => 
-                  m.id === mapId ? { ...m, templateImage: event.target.result } : m
-                ));
-              };
-              reader.readAsDataURL(file);
-            }
+          const updateMapImageUrl = (id, url) => {
+            setMaps(maps.map(m => m.id === id ? { ...m, templateImageUrl: url } : m));
           };
 
           const handleSetupCanvasClick = (e) => {
@@ -524,7 +516,7 @@
             if (mode !== 'setup' || !setupCanvasRef.current) return;
             
             const currentMap = getCurrentMap();
-            if (!currentMap || !currentMap.templateImage) return;
+            if (!currentMap || !currentMap.templateImageUrl) return;
             
             const canvas = setupCanvasRef.current;
             const ctx = canvas.getContext('2d');
@@ -611,14 +603,14 @@
               });
             };
             
-            img.src = currentMap.templateImage;
+            img.src = currentMap.templateImageUrl;
           }, [mode, maps, currentMapId, designPatterns, currentPatternId, selectedField]);
 
           useEffect(() => {
             if (mode !== 'user' || !canvasRef.current) return;
             
             const selectedMap = maps.find(m => m.id === selectedMapForUser);
-            if (!selectedMap || !selectedMap.templateImage) return;
+            if (!selectedMap || !selectedMap.templateImageUrl) return;
             
             const canvas = canvasRef.current;
             const ctx = canvas.getContext('2d');
@@ -735,7 +727,7 @@
               }
             };
             
-            img.src = selectedMap.templateImage;
+            img.src = selectedMap.templateImageUrl;
           }, [mode, maps, selectedMapForUser, userData, selectedPatternForUser, designPatterns]);
 
           const handleUserImageUpload = (e, type) => {
@@ -759,28 +751,17 @@
             a.click();
           };
 
-          const generateUserSite = () => {
-            const configData = { maps, designPatterns };
-            const blob = new Blob([JSON.stringify(configData, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'card-config.json';
-            a.click();
-            setShowUrlGenerator(true);
-          };
-
           const generateDistributionUrl = () => {
-            if (!configUrl) {
-              alert('設定ファイルのURLを入力してください');
+            if (!baseUrl) {
+              alert('配布用URLのベースを入力してください\n\n例: https://tasogareeventoperation.github.io/event-card/card-config.json');
               return;
             }
-            const baseUrl = window.location.origin + window.location.pathname;
-            const distributionUrl = `${baseUrl}?config=${encodeURIComponent(configUrl)}`;
+            const siteBaseUrl = window.location.origin + window.location.pathname;
+            const distributionUrl = `${siteBaseUrl}?config=${encodeURIComponent(baseUrl)}`;
             navigator.clipboard.writeText(distributionUrl).then(() => {
-              alert('配布用URLをクリップボードにコピーしました!\n\nこのURLをTwitterで配布してください:\n\n' + distributionUrl);
+              alert('配布用URLをクリップボードにコピーしました!\n\n' + distributionUrl);
             }).catch(() => {
-              alert('配布用URL:\n\n' + distributionUrl + '\n\nこのURLをコピーしてTwitterで配布してください!');
+              alert('配布用URL:\n\n' + distributionUrl);
             });
           };
 
@@ -850,6 +831,16 @@
                   <div className="panel">
                     <h2 className="panel-title">設定パネル</h2>
                     
+                    <div className="warning-box">
+                      <h3 className="form-label" style={{marginBottom: '12px'}}>⚠️ 重要: 画像の外部ホスティングが必要です</h3>
+                      <p style={{fontSize: '14px', marginBottom: '8px'}}>
+                        マップ画像は別途GitHubにアップロードして、そのURLを下記に入力してください。
+                      </p>
+                      <p style={{fontSize: '12px', color: '#856404'}}>
+                        例: https://yourname.github.io/project/map1.png
+                      </p>
+                    </div>
+
                     <div className="form-group">
                       <label className="form-label">設定ファイル読み込み</label>
                       <input type="file" accept=".json" onChange={loadConfig} className="form-input" />
@@ -860,37 +851,6 @@
                         設定を保存(JSON)
                       </button>
                     </div>
-
-                    <div className="form-group">
-                      <button onClick={generateUserSite} className="button button-secondary button-full">
-                        🔗 配布用設定ファイルを生成
-                      </button>
-                      <p className="text-small">
-                        💡 JSONファイルをGoogleドライブ等にアップロードして直リンクを取得してください
-                      </p>
-                    </div>
-
-                    {showUrlGenerator && (
-                      <div className="info-box">
-                        <h3 className="form-label">配布用URL生成</h3>
-                        <p className="text-small" style={{marginBottom: '12px'}}>
-                          1. 生成されたJSONファイルをGoogleドライブ等にアップロード<br/>
-                          2. 直リンク(ダイレクトダウンロードURL)を取得<br/>
-                          3. 下記に貼り付けて「URL生成」をクリック
-                        </p>
-                        <input
-                          type="text"
-                          placeholder="https://..."
-                          value={configUrl}
-                          onChange={(e) => setConfigUrl(e.target.value)}
-                          className="form-input"
-                          style={{marginBottom: '8px'}}
-                        />
-                        <button onClick={generateDistributionUrl} className="button button-primary button-full">
-                          📋 配布用URLを生成・コピー
-                        </button>
-                      </div>
-                    )}
 
                     <div className="divider"></div>
 
@@ -904,12 +864,15 @@
                             onChange={(e) => updateMapName(map.id, e.target.value)}
                             className="form-input"
                             style={{marginBottom: '8px'}}
+                            placeholder="マップ名"
                           />
                           <input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => handleMapTemplateUpload(map.id, e)}
-                            style={{marginBottom: '8px', fontSize: '14px'}}
+                            type="text"
+                            value={map.templateImageUrl}
+                            onChange={(e) => updateMapImageUrl(map.id, e.target.value)}
+                            className="form-input"
+                            style={{marginBottom: '8px'}}
+                            placeholder="画像URL (例: https://.../.../map.png)"
                           />
                           <div className="text-small">
                             登録スペース数: {Object.keys(map.spacePositions).length}件
@@ -1092,11 +1055,34 @@
                         {mapMode ? '設定中' : '位置設定'}
                       </button>
                     </div>
+
+                    <div className="divider"></div>
+
+                    <div className="info-box">
+                      <h3 className="form-label">配布用URL生成</h3>
+                      <p className="text-small" style={{marginBottom: '12px'}}>
+                        1. 「設定を保存」でJSONファイルをダウンロード<br/>
+                        2. JSONファイルをGitHubにアップロード<br/>
+                        3. アップロードしたJSONファイルのURLを下記に入力<br/>
+                        4. 「URL生成」をクリック
+                      </p>
+                      <input
+                        type="text"
+                        placeholder="https://yourname.github.io/project/card-config.json"
+                        value={baseUrl}
+                        onChange={(e) => setBaseUrl(e.target.value)}
+                        className="form-input"
+                        style={{marginBottom: '8px'}}
+                      />
+                      <button onClick={generateDistributionUrl} className="button button-primary button-full">
+                        📋 配布用URLを生成・コピー
+                      </button>
+                    </div>
                   </div>
 
                   <div className="panel">
                     <h2 className="panel-title">プレビュー</h2>
-                    {currentMap && currentMap.templateImage ? (
+                    {currentMap && currentMap.templateImageUrl ? (
                       <div className="canvas-container">
                         <canvas
                           ref={setupCanvasRef}
@@ -1104,7 +1090,7 @@
                         />
                       </div>
                     ) : (
-                      <p style={{color: '#999'}}>マップのテンプレート画像をアップロードしてください</p>
+                      <p style={{color: '#999'}}>マップの画像URLを入力してください</p>
                     )}
                   </div>
                 </div>
@@ -1416,7 +1402,7 @@
 
                   <div className="panel">
                     <h2 className="panel-title">プレビュー</h2>
-                    {maps.find(m => m.id === selectedMapForUser)?.templateImage ? (
+                    {maps.find(m => m.id === selectedMapForUser)?.templateImageUrl ? (
                       <div className="canvas-container">
                         <canvas ref={canvasRef} />
                       </div>
