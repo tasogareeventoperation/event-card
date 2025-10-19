@@ -1,0 +1,1431 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>参加表明カード生成システム</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&family=M+PLUS+1p:wght@400;700&family=Zen+Maru+Gothic:wght@400;700&family=Hachi+Maru+Pop&family=Zen+Kaku+Gothic+New:wght@400;700&family=Sawarabi+Gothic&family=Klee+One:wght@400;600&family=Yusei+Magic&family=Noto+Serif+JP:wght@400;700&family=Shippori+Mincho:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background-color: #EDE9E3;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+        .title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #361403;
+            margin-bottom: 16px;
+        }
+        .mode-buttons {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .mode-button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+        .mode-button:hover {
+            opacity: 0.9;
+        }
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        @media (max-width: 1024px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .panel {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 24px;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+        .panel-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #361403;
+            margin-bottom: 16px;
+        }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #361403;
+        }
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        .button {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .button:hover {
+            opacity: 0.9;
+        }
+        .button-full {
+            width: 100%;
+            padding: 12px;
+        }
+        .button-primary {
+            background-color: #08224A;
+            color: white;
+        }
+        .button-secondary {
+            background-color: #361403;
+            color: white;
+        }
+        .button-light {
+            background-color: #E7D7C9;
+            color: #361403;
+        }
+        .checkbox-group, .radio-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .checkbox-label, .radio-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+        .info-box {
+            background-color: #E7D7C9;
+            border: 2px solid #8c6051;
+            border-radius: 6px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        .map-item {
+            padding: 16px;
+            border: 2px solid #E7D7C9;
+            border-radius: 6px;
+            margin-bottom: 12px;
+        }
+        .map-item.active {
+            background-color: #E7D7C9;
+            border-color: #8c6051;
+        }
+        .pattern-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px;
+            border: 1px solid #E7D7C9;
+            border-radius: 6px;
+            margin-bottom: 8px;
+        }
+        .pattern-item.active {
+            background-color: #E7D7C9;
+            border-color: #8c6051;
+        }
+        .field-button {
+            width: 100%;
+            padding: 12px;
+            text-align: left;
+            border: 2px solid #E7D7C9;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-bottom: 8px;
+            color: #361403;
+            font-weight: 600;
+        }
+        .field-button.active {
+            background-color: #E7D7C9;
+            border-color: #8c6051;
+        }
+        .canvas-container {
+            border: 1px solid #ddd;
+            overflow: auto;
+            max-height: 70vh;
+        }
+        canvas {
+            display: block;
+            cursor: crosshair;
+        }
+        .divider {
+            height: 1px;
+            background-color: #ddd;
+            margin: 20px 0;
+        }
+        .text-small {
+            font-size: 12px;
+            color: #8c6051;
+            margin-top: 8px;
+        }
+        .flex-between {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .icon {
+            width: 20px;
+            height: 20px;
+            display: inline-block;
+        }
+        input[type="file"] {
+            font-size: 14px;
+        }
+        .content-section {
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        .subsection {
+            margin-bottom: 16px;
+        }
+        .subsection-title {
+            font-weight: 600;
+            font-size: 14px;
+            color: #555;
+            margin-bottom: 8px;
+        }
+        .indent {
+            padding-left: 16px;
+        }
+        .button-group {
+            display: flex;
+            gap: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useRef, useEffect } = React;
+
+        const EventCardGenerator = () => {
+          const fontOptions = [
+            { value: 'Noto Sans JP', label: 'Noto Sans JP (標準ゴシック)' },
+            { value: 'Zen Maru Gothic', label: 'Zen Maru Gothic (丸ゴシック・可愛い)' },
+            { value: 'Hachi Maru Pop', label: 'Hachi Maru Pop (ポップ・かなり可愛い)' },
+            { value: 'Zen Kaku Gothic New', label: 'Zen Kaku Gothic New (角ゴシック・シャープ)' },
+            { value: 'Klee One', label: 'Klee One (手書き風・ナチュラル)' },
+            { value: 'Yusei Magic', label: 'Yusei Magic (手書き風・カジュアル)' },
+            { value: 'Noto Serif JP', label: 'Noto Serif JP (明朝体・上品)' },
+            { value: 'Shippori Mincho', label: 'Shippori Mincho (明朝体・繊細)' }
+          ];
+
+          const [mode, setMode] = useState('setup');
+          const [configUrl, setConfigUrl] = useState('');
+          const [showUrlGenerator, setShowUrlGenerator] = useState(false);
+          
+          const [maps, setMaps] = useState([
+            { id: 'map1', name: 'マップ1', templateImage: null, spacePositions: {} },
+            { id: 'map2', name: 'マップ2', templateImage: null, spacePositions: {} },
+            { id: 'map3', name: 'マップ3', templateImage: null, spacePositions: {} },
+            { id: 'map4', name: 'マップ4', templateImage: null, spacePositions: {} },
+            { id: 'map5', name: 'マップ5', templateImage: null, spacePositions: {} }
+          ]);
+          const [currentMapId, setCurrentMapId] = useState('map1');
+          
+          const [designPatterns, setDesignPatterns] = useState([
+            {
+              id: 'pattern1',
+              name: 'デフォルト',
+              fields: {
+                circleName: { x: 100, y: 100, fontSize: 24, color: '#000000', fontFamily: 'Noto Sans JP' },
+                handleName: { x: 100, y: 140, fontSize: 20, color: '#000000', fontFamily: 'Noto Sans JP' },
+                content: { x: 100, y: 180, fontSize: 16, color: '#000000', fontFamily: 'Noto Sans JP' },
+                spaceNumber: { x: 100, y: 220, fontSize: 20, color: '#000000', fontFamily: 'Noto Sans JP' },
+                attendance: { x: 100, y: 260, fontSize: 16, color: '#000000', fontFamily: 'Noto Sans JP' },
+                circlecut: { x: 50, y: 300, width: 150, height: 150 },
+                storefront: { x: 220, y: 300, width: 150, height: 150 },
+                checkboxes: {
+                  illustration: { x1: 150, y1: 500, x2: 220, y2: 500 },
+                  manga: { x1: 230, y1: 500, x2: 280, y2: 500 },
+                  novel: { x1: 290, y1: 500, x2: 340, y2: 500 },
+                  goods: { x1: 350, y1: 500, x2: 420, y2: 500 },
+                  mailOrder: { x1: 430, y1: 500, x2: 480, y2: 500 },
+                  netprint: { x1: 490, y1: 500, x2: 590, y2: 500 },
+                  allGenre: { x1: 150, y1: 550, x2: 280, y2: 550 },
+                  yume: { x1: 250, y1: 550, x2: 280, y2: 550 },
+                  fu: { x1: 350, y1: 550, x2: 370, y2: 550 },
+                  allAges: { x1: 150, y1: 600, x2: 240, y2: 600 },
+                  r18: { x1: 250, y1: 600, x2: 310, y2: 600 },
+                  attendingYes: { x1: 150, y1: 650, x2: 200, y2: 650 },
+                  attendingNo: { x1: 250, y1: 650, x2: 310, y2: 650 }
+                }
+              }
+            }
+          ]);
+          
+          const [currentPatternId, setCurrentPatternId] = useState('pattern1');
+          const [selectedField, setSelectedField] = useState(null);
+          const [mapMode, setMapMode] = useState(false);
+          const [currentSpaceNumber, setCurrentSpaceNumber] = useState('');
+          const [selectedCheckboxPoint, setSelectedCheckboxPoint] = useState(null);
+          
+          const [selectedPatternForUser, setSelectedPatternForUser] = useState('pattern1');
+          const [selectedMapForUser, setSelectedMapForUser] = useState('map1');
+          const [imageFormat, setImageFormat] = useState('png');
+          const [userData, setUserData] = useState({
+            circleName: '',
+            handleName: '',
+            contentWork: {
+              illustration: false,
+              manga: false,
+              novel: false,
+              goods: false,
+              mailOrder: false,
+              netprint: false
+            },
+            contentTendency: {
+              allGenre: false,
+              yume: false,
+              fu: false
+            },
+            contentRating: {
+              allAges: false,
+              r18: false
+            },
+            contentFreeText: '',
+            spaceNumber: '',
+            isAttending: 'yes',
+            attendanceTime: '',
+            circlecutImage: null,
+            storefrontImage: null
+          });
+          
+          const canvasRef = useRef(null);
+          const setupCanvasRef = useRef(null);
+
+          useEffect(() => {
+            const params = new URLSearchParams(window.location.search);
+            const configUrlParam = params.get('config');
+            
+            if (configUrlParam) {
+              fetch(configUrlParam)
+                .then(response => response.json())
+                .then(data => {
+                  setMaps(data.maps);
+                  setDesignPatterns(data.designPatterns);
+                  setCurrentMapId(data.maps[0].id);
+                  setCurrentPatternId(data.designPatterns[0].id);
+                  setSelectedPatternForUser(data.designPatterns[0].id);
+                  setSelectedMapForUser(data.maps[0].id);
+                  setMode('user');
+                })
+                .catch(error => {
+                  alert('設定ファイルの読み込みに失敗しました。URLを確認してください。');
+                  console.error(error);
+                });
+            }
+          }, []);
+
+          const getCurrentPattern = () => {
+            return designPatterns.find(p => p.id === currentPatternId);
+          };
+
+          const getCurrentMap = () => {
+            return maps.find(m => m.id === currentMapId);
+          };
+
+          const addNewPattern = () => {
+            const newId = `pattern${Date.now()}`;
+            const currentPattern = getCurrentPattern();
+            setDesignPatterns([...designPatterns, {
+              id: newId,
+              name: `パターン ${designPatterns.length + 1}`,
+              fields: JSON.parse(JSON.stringify(currentPattern.fields))
+            }]);
+            setCurrentPatternId(newId);
+          };
+
+          const deletePattern = (id) => {
+            if (designPatterns.length <= 1) {
+              alert('最低1つのパターンが必要です');
+              return;
+            }
+            setDesignPatterns(designPatterns.filter(p => p.id !== id));
+            if (currentPatternId === id) {
+              setCurrentPatternId(designPatterns[0].id);
+            }
+          };
+
+          const updatePatternName = (id, newName) => {
+            setDesignPatterns(designPatterns.map(p => 
+              p.id === id ? { ...p, name: newName } : p
+            ));
+          };
+
+          const updateFieldConfig = (field, updates) => {
+            setDesignPatterns(designPatterns.map(p => 
+              p.id === currentPatternId 
+                ? {
+                    ...p,
+                    fields: {
+                      ...p.fields,
+                      [field]: { ...p.fields[field], ...updates }
+                    }
+                  }
+                : p
+            ));
+          };
+
+          const updateMapName = (id, newName) => {
+            setMaps(maps.map(m => m.id === id ? { ...m, name: newName } : m));
+          };
+
+          const handleMapTemplateUpload = (mapId, e) => {
+            const file = e.target.files[0];
+            if (file) {
+              const reader = new FileReader();
+              reader.onload = (event) => {
+                setMaps(maps.map(m => 
+                  m.id === mapId ? { ...m, templateImage: event.target.result } : m
+                ));
+              };
+              reader.readAsDataURL(file);
+            }
+          };
+
+          const handleSetupCanvasClick = (e) => {
+            if (!selectedField || mapMode) return;
+            
+            const canvas = setupCanvasRef.current;
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            if (selectedField.startsWith('checkbox_')) {
+              const checkboxKey = selectedField.replace('checkbox_', '');
+              
+              if (!selectedCheckboxPoint) {
+                setDesignPatterns(designPatterns.map(p => 
+                  p.id === currentPatternId 
+                    ? {
+                        ...p,
+                        fields: {
+                          ...p.fields,
+                          checkboxes: {
+                            ...p.fields.checkboxes,
+                            [checkboxKey]: { 
+                              x1: Math.round(x), 
+                              y1: Math.round(y),
+                              x2: p.fields.checkboxes[checkboxKey]?.x2 || Math.round(x) + 50,
+                              y2: p.fields.checkboxes[checkboxKey]?.y2 || Math.round(y)
+                            }
+                          }
+                        }
+                      }
+                    : p
+                ));
+                setSelectedCheckboxPoint('start');
+              } else {
+                setDesignPatterns(designPatterns.map(p => 
+                  p.id === currentPatternId 
+                    ? {
+                        ...p,
+                        fields: {
+                          ...p.fields,
+                          checkboxes: {
+                            ...p.fields.checkboxes,
+                            [checkboxKey]: { 
+                              ...p.fields.checkboxes[checkboxKey],
+                              x2: Math.round(x), 
+                              y2: Math.round(y)
+                            }
+                          }
+                        }
+                      }
+                    : p
+                ));
+                setSelectedCheckboxPoint(null);
+              }
+            } else {
+              updateFieldConfig(selectedField, { x: Math.round(x), y: Math.round(y) });
+            }
+          };
+
+          const handleMapClick = (e) => {
+            if (!mapMode || !currentSpaceNumber) return;
+            
+            const canvas = setupCanvasRef.current;
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            setMaps(maps.map(m => 
+              m.id === currentMapId 
+                ? {
+                    ...m,
+                    spacePositions: {
+                      ...m.spacePositions,
+                      [currentSpaceNumber]: { x: Math.round(x), y: Math.round(y) }
+                    }
+                  }
+                : m
+            ));
+            
+            setCurrentSpaceNumber('');
+          };
+
+          useEffect(() => {
+            if (mode !== 'setup' || !setupCanvasRef.current) return;
+            
+            const currentMap = getCurrentMap();
+            if (!currentMap || !currentMap.templateImage) return;
+            
+            const canvas = setupCanvasRef.current;
+            const ctx = canvas.getContext('2d');
+            const img = new Image();
+            const currentPattern = getCurrentPattern();
+            
+            img.onload = async () => {
+              await document.fonts.ready;
+              
+              canvas.width = img.width;
+              canvas.height = img.height;
+              ctx.drawImage(img, 0, 0);
+              
+              if (!currentPattern) return;
+              
+              Object.entries(currentPattern.fields).forEach(([key, field]) => {
+                if (key === 'checkboxes') return;
+                
+                ctx.fillStyle = 'rgba(0, 123, 255, 0.3)';
+                ctx.strokeStyle = '#007bff';
+                ctx.lineWidth = 2;
+                
+                if (key === 'circlecut' || key === 'storefront') {
+                  ctx.fillRect(field.x, field.y, field.width, field.height);
+                  ctx.strokeRect(field.x, field.y, field.width, field.height);
+                } else {
+                  ctx.fillRect(field.x - 5, field.y - 5, 10, 10);
+                  ctx.strokeRect(field.x - 5, field.y - 5, 10, 10);
+                }
+                
+                if (selectedField === key) {
+                  ctx.strokeStyle = '#ff0000';
+                  ctx.lineWidth = 3;
+                  if (key === 'circlecut' || key === 'storefront') {
+                    ctx.strokeRect(field.x, field.y, field.width, field.height);
+                  } else {
+                    ctx.strokeRect(field.x - 8, field.y - 8, 16, 16);
+                  }
+                }
+              });
+              
+              if (currentPattern.fields.checkboxes) {
+                Object.entries(currentPattern.fields.checkboxes).forEach(([key, line]) => {
+                  ctx.strokeStyle = '#00aa00';
+                  ctx.lineWidth = 3;
+                  ctx.beginPath();
+                  ctx.moveTo(line.x1, line.y1);
+                  ctx.lineTo(line.x2, line.y2);
+                  ctx.stroke();
+                  
+                  ctx.fillStyle = '#00aa00';
+                  ctx.beginPath();
+                  ctx.arc(line.x1, line.y1, 4, 0, Math.PI * 2);
+                  ctx.fill();
+                  ctx.beginPath();
+                  ctx.arc(line.x2, line.y2, 4, 0, Math.PI * 2);
+                  ctx.fill();
+                  
+                  if (selectedField === `checkbox_${key}`) {
+                    ctx.strokeStyle = '#ff0000';
+                    ctx.lineWidth = 4;
+                    ctx.beginPath();
+                    ctx.moveTo(line.x1, line.y1);
+                    ctx.lineTo(line.x2, line.y2);
+                    ctx.stroke();
+                  }
+                  
+                  ctx.fillStyle = '#00aa00';
+                  ctx.font = '10px sans-serif';
+                  ctx.textAlign = 'center';
+                  ctx.fillText(key, (line.x1 + line.x2) / 2, line.y1 - 8);
+                });
+              }
+              
+              Object.entries(currentMap.spacePositions).forEach(([space, pos]) => {
+                ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
+                ctx.beginPath();
+                ctx.arc(pos.x, pos.y, 8, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#ffffff';
+                ctx.font = '10px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(space, pos.x, pos.y + 3);
+              });
+            };
+            
+            img.src = currentMap.templateImage;
+          }, [mode, maps, currentMapId, designPatterns, currentPatternId, selectedField]);
+
+          useEffect(() => {
+            if (mode !== 'user' || !canvasRef.current) return;
+            
+            const selectedMap = maps.find(m => m.id === selectedMapForUser);
+            if (!selectedMap || !selectedMap.templateImage) return;
+            
+            const canvas = canvasRef.current;
+            const ctx = canvas.getContext('2d');
+            const img = new Image();
+            const selectedPattern = designPatterns.find(p => p.id === selectedPatternForUser);
+            
+            img.onload = async () => {
+              await document.fonts.ready;
+              
+              canvas.width = img.width;
+              canvas.height = img.height;
+              ctx.drawImage(img, 0, 0);
+              
+              if (!selectedPattern) return;
+              
+              const drawText = (text, field) => {
+                ctx.fillStyle = field.color;
+                ctx.font = `${field.fontSize}px "${field.fontFamily}"`;
+                ctx.fillText(text, field.x, field.y);
+              };
+              
+              const drawMultiLineText = (text, field) => {
+                ctx.fillStyle = field.color;
+                ctx.font = `${field.fontSize}px "${field.fontFamily}"`;
+                const lines = text.split('\n');
+                lines.forEach((line, index) => {
+                  ctx.fillText(line, field.x, field.y + (index * (field.fontSize + 4)));
+                });
+              };
+              
+              if (userData.circleName) drawMultiLineText(userData.circleName, selectedPattern.fields.circleName);
+              if (userData.handleName) drawMultiLineText(userData.handleName, selectedPattern.fields.handleName);
+              
+              if (userData.contentFreeText) {
+                const lines = userData.contentFreeText.split('\n');
+                lines.forEach((line, index) => {
+                  drawText(line, {
+                    ...selectedPattern.fields.content,
+                    y: selectedPattern.fields.content.y + (index * (selectedPattern.fields.content.fontSize + 4))
+                  });
+                });
+              }
+              
+              if (userData.spaceNumber) drawText(userData.spaceNumber, selectedPattern.fields.spaceNumber);
+              
+              if (userData.isAttending === 'yes' && userData.attendanceTime) {
+                drawText(userData.attendanceTime, selectedPattern.fields.attendance);
+              }
+              
+              const drawUserImage = (imageSrc, field) => {
+                if (!imageSrc) {
+                  ctx.fillStyle = '#E7D7C9';
+                  ctx.fillRect(field.x, field.y, field.width, field.height);
+                  ctx.strokeStyle = '#8c6051';
+                  ctx.lineWidth = 2;
+                  ctx.strokeRect(field.x, field.y, field.width, field.height);
+                  ctx.fillStyle = '#361403';
+                  ctx.font = '16px "Noto Sans JP"';
+                  ctx.textAlign = 'center';
+                  ctx.textBaseline = 'middle';
+                  ctx.fillText('準備中', field.x + field.width / 2, field.y + field.height / 2);
+                  return;
+                }
+                const userImg = new Image();
+                userImg.onload = () => {
+                  ctx.drawImage(userImg, field.x, field.y, field.width, field.height);
+                };
+                userImg.src = imageSrc;
+              };
+              
+              drawUserImage(userData.circlecutImage, selectedPattern.fields.circlecut);
+              drawUserImage(userData.storefrontImage, selectedPattern.fields.storefront);
+              
+              const drawHighlightLine = (line) => {
+                ctx.strokeStyle = 'rgba(255, 0, 0, 0.4)';
+                ctx.lineWidth = 20;
+                ctx.lineCap = 'round';
+                ctx.beginPath();
+                ctx.moveTo(line.x1, line.y1);
+                ctx.lineTo(line.x2, line.y2);
+                ctx.stroke();
+              };
+              
+              if (selectedPattern.fields.checkboxes) {
+                const cb = selectedPattern.fields.checkboxes;
+                
+                if (userData.contentWork.illustration && cb.illustration) drawHighlightLine(cb.illustration);
+                if (userData.contentWork.manga && cb.manga) drawHighlightLine(cb.manga);
+                if (userData.contentWork.novel && cb.novel) drawHighlightLine(cb.novel);
+                if (userData.contentWork.goods && cb.goods) drawHighlightLine(cb.goods);
+                if (userData.contentWork.mailOrder && cb.mailOrder) drawHighlightLine(cb.mailOrder);
+                if (userData.contentWork.netprint && cb.netprint) drawHighlightLine(cb.netprint);
+                
+                if (userData.contentTendency.allGenre && cb.allGenre) drawHighlightLine(cb.allGenre);
+                if (userData.contentTendency.yume && cb.yume) drawHighlightLine(cb.yume);
+                if (userData.contentTendency.fu && cb.fu) drawHighlightLine(cb.fu);
+                
+                if (userData.contentRating.allAges && cb.allAges) drawHighlightLine(cb.allAges);
+                if (userData.contentRating.r18 && cb.r18) drawHighlightLine(cb.r18);
+                
+                if (userData.isAttending === 'yes' && cb.attendingYes) drawHighlightLine(cb.attendingYes);
+                if (userData.isAttending === 'no' && cb.attendingNo) drawHighlightLine(cb.attendingNo);
+              }
+              
+              if (userData.spaceNumber && selectedMap.spacePositions[userData.spaceNumber]) {
+                const pos = selectedMap.spacePositions[userData.spaceNumber];
+                ctx.fillStyle = 'rgba(255, 0, 0, 0.7)';
+                ctx.beginPath();
+                ctx.arc(pos.x, pos.y, 12, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+              }
+            };
+            
+            img.src = selectedMap.templateImage;
+          }, [mode, maps, selectedMapForUser, userData, selectedPatternForUser, designPatterns]);
+
+          const handleUserImageUpload = (e, type) => {
+            const file = e.target.files[0];
+            if (file) {
+              const reader = new FileReader();
+              reader.onload = (event) => {
+                setUserData(prev => ({ ...prev, [type]: event.target.result }));
+              };
+              reader.readAsDataURL(file);
+            }
+          };
+
+          const saveConfig = () => {
+            const configData = { maps, designPatterns };
+            const blob = new Blob([JSON.stringify(configData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'card-config.json';
+            a.click();
+          };
+
+          const generateUserSite = () => {
+            const configData = { maps, designPatterns };
+            const blob = new Blob([JSON.stringify(configData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'card-config.json';
+            a.click();
+            setShowUrlGenerator(true);
+          };
+
+          const generateDistributionUrl = () => {
+            if (!configUrl) {
+              alert('設定ファイルのURLを入力してください');
+              return;
+            }
+            const baseUrl = window.location.origin + window.location.pathname;
+            const distributionUrl = `${baseUrl}?config=${encodeURIComponent(configUrl)}`;
+            navigator.clipboard.writeText(distributionUrl).then(() => {
+              alert('配布用URLをクリップボードにコピーしました!\n\nこのURLをTwitterで配布してください:\n\n' + distributionUrl);
+            }).catch(() => {
+              alert('配布用URL:\n\n' + distributionUrl + '\n\nこのURLをコピーしてTwitterで配布してください!');
+            });
+          };
+
+          const loadConfig = (e) => {
+            const file = e.target.files[0];
+            if (file) {
+              const reader = new FileReader();
+              reader.onload = (event) => {
+                const data = JSON.parse(event.target.result);
+                setMaps(data.maps);
+                setDesignPatterns(data.designPatterns);
+                setCurrentMapId(data.maps[0].id);
+                setCurrentPatternId(data.designPatterns[0].id);
+                setSelectedPatternForUser(data.designPatterns[0].id);
+                setSelectedMapForUser(data.maps[0].id);
+              };
+              reader.readAsText(file);
+            }
+          };
+
+          const downloadCard = () => {
+            const canvas = canvasRef.current;
+            const mimeType = imageFormat === 'png' ? 'image/png' : 'image/jpeg';
+            const extension = imageFormat === 'png' ? 'png' : 'jpg';
+            const url = canvas.toDataURL(mimeType, 0.95);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `participation-card.${extension}`;
+            a.click();
+          };
+
+          const currentPattern = getCurrentPattern();
+          const currentMap = getCurrentMap();
+
+          return (
+            <div className="container">
+              <div className="header-card">
+                <h1 className="title">参加表明カード生成システム</h1>
+                <div className="mode-buttons">
+                  <button
+                    onClick={() => setMode('setup')}
+                    className="mode-button"
+                    style={{ 
+                      backgroundColor: mode === 'setup' ? '#08224A' : '#E7D7C9',
+                      color: mode === 'setup' ? '#ffffff' : '#361403'
+                    }}
+                  >
+                    ⚙️ 設定モード(主催者用)
+                  </button>
+                  <button
+                    onClick={() => setMode('user')}
+                    className="mode-button"
+                    style={{ 
+                      backgroundColor: mode === 'user' ? '#361403' : '#E7D7C9',
+                      color: mode === 'user' ? '#ffffff' : '#361403'
+                    }}
+                  >
+                    👤 利用モード(参加者用)
+                  </button>
+                </div>
+              </div>
+
+              {mode === 'setup' ? (
+                <div className="content-grid">
+                  <div className="panel">
+                    <h2 className="panel-title">設定パネル</h2>
+                    
+                    <div className="form-group">
+                      <label className="form-label">設定ファイル読み込み</label>
+                      <input type="file" accept=".json" onChange={loadConfig} className="form-input" />
+                    </div>
+
+                    <div className="form-group">
+                      <button onClick={saveConfig} className="button button-primary button-full">
+                        設定を保存(JSON)
+                      </button>
+                    </div>
+
+                    <div className="form-group">
+                      <button onClick={generateUserSite} className="button button-secondary button-full">
+                        🔗 配布用設定ファイルを生成
+                      </button>
+                      <p className="text-small">
+                        💡 JSONファイルをGoogleドライブ等にアップロードして直リンクを取得してください
+                      </p>
+                    </div>
+
+                    {showUrlGenerator && (
+                      <div className="info-box">
+                        <h3 className="form-label">配布用URL生成</h3>
+                        <p className="text-small" style={{marginBottom: '12px'}}>
+                          1. 生成されたJSONファイルをGoogleドライブ等にアップロード<br/>
+                          2. 直リンク(ダイレクトダウンロードURL)を取得<br/>
+                          3. 下記に貼り付けて「URL生成」をクリック
+                        </p>
+                        <input
+                          type="text"
+                          placeholder="https://..."
+                          value={configUrl}
+                          onChange={(e) => setConfigUrl(e.target.value)}
+                          className="form-input"
+                          style={{marginBottom: '8px'}}
+                        />
+                        <button onClick={generateDistributionUrl} className="button button-primary button-full">
+                          📋 配布用URLを生成・コピー
+                        </button>
+                      </div>
+                    )}
+
+                    <div className="divider"></div>
+
+                    <div className="form-group">
+                      <h3 className="form-label">マップ管理(5種類)</h3>
+                      {maps.map(map => (
+                        <div key={map.id} className={`map-item ${currentMapId === map.id ? 'active' : ''}`}>
+                          <input
+                            type="text"
+                            value={map.name}
+                            onChange={(e) => updateMapName(map.id, e.target.value)}
+                            className="form-input"
+                            style={{marginBottom: '8px'}}
+                          />
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => handleMapTemplateUpload(map.id, e)}
+                            style={{marginBottom: '8px', fontSize: '14px'}}
+                          />
+                          <div className="text-small">
+                            登録スペース数: {Object.keys(map.spacePositions).length}件
+                          </div>
+                          <button
+                            onClick={() => setCurrentMapId(map.id)}
+                            className="button button-full"
+                            style={{ 
+                              backgroundColor: currentMapId === map.id ? '#08224A' : '#E7D7C9',
+                              color: currentMapId === map.id ? '#ffffff' : '#361403',
+                              marginTop: '8px'
+                            }}
+                          >
+                            {currentMapId === map.id ? '編集中' : '編集する'}
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="divider"></div>
+
+                    <div className="form-group">
+                      <div className="flex-between">
+                        <h3 className="form-label" style={{margin: 0}}>デザインパターン</h3>
+                        <button onClick={addNewPattern} className="button button-secondary">
+                          ➕ 追加
+                        </button>
+                      </div>
+                      
+                      {designPatterns.map(pattern => (
+                        <div key={pattern.id} className={`pattern-item ${currentPatternId === pattern.id ? 'active' : ''}`}>
+                          <input
+                            type="text"
+                            value={pattern.name}
+                            onChange={(e) => updatePatternName(pattern.id, e.target.value)}
+                            className="form-input"
+                            style={{flex: 1}}
+                          />
+                          <button
+                            onClick={() => setCurrentPatternId(pattern.id)}
+                            className="button"
+                            style={{ 
+                              backgroundColor: currentPatternId === pattern.id ? '#08224A' : '#E7D7C9',
+                              color: currentPatternId === pattern.id ? '#ffffff' : '#361403'
+                            }}
+                          >
+                            編集
+                          </button>
+                          {designPatterns.length > 1 && (
+                            <button onClick={() => deletePattern(pattern.id)} className="button button-light">
+                              🗑️
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="divider"></div>
+
+                    <div className="form-group">
+                      <h3 className="form-label">フィールド選択(クリックで位置設定)</h3>
+                      <p className="text-small" style={{marginBottom: '8px'}}>テキストフィールド</p>
+                      {currentPattern && ['circleName', 'handleName', 'content', 'spaceNumber', 'attendance'].map(key => (
+                        <button
+                          key={key}
+                          onClick={() => { setSelectedField(key); setMapMode(false); }}
+                          className={`field-button ${selectedField === key ? 'active' : ''}`}
+                        >
+                          {key}
+                        </button>
+                      ))}
+                      <p className="text-small" style={{marginTop: '16px', marginBottom: '8px'}}>画像フィールド</p>
+                      {currentPattern && ['circlecut', 'storefront'].map(key => (
+                        <button
+                          key={key}
+                          onClick={() => { setSelectedField(key); setMapMode(false); }}
+                          className={`field-button ${selectedField === key ? 'active' : ''}`}
+                        >
+                          {key}
+                        </button>
+                      ))}
+                      <p className="text-small" style={{marginTop: '16px', marginBottom: '8px'}}>ハイライト位置(2回クリック:開始→終了)</p>
+                      {selectedCheckboxPoint && (
+                        <p className="text-small" style={{color: '#ff0000', marginBottom: '8px'}}>
+                          ✓ 開始点設定完了 → 次に終了点をクリック
+                        </p>
+                      )}
+                      {currentPattern && currentPattern.fields.checkboxes && Object.keys(currentPattern.fields.checkboxes).map(key => (
+                        <button
+                          key={key}
+                          onClick={() => { setSelectedField(`checkbox_${key}`); setMapMode(false); setSelectedCheckboxPoint(null); }}
+                          className={`field-button ${selectedField === `checkbox_${key}` ? 'active' : ''}`}
+                        >
+                          📝 {key}
+                        </button>
+                      ))}
+                    </div>
+
+                    {currentPattern && selectedField && !['circlecut', 'storefront'].includes(selectedField) && !selectedField.startsWith('checkbox_') && (
+                      <div className="info-box">
+                        <h4 className="form-label">フォント設定: {selectedField}</h4>
+                        <div className="form-group">
+                          <label className="form-label">フォント種類</label>
+                          <select
+                            value={currentPattern.fields[selectedField].fontFamily}
+                            onChange={(e) => updateFieldConfig(selectedField, { fontFamily: e.target.value })}
+                            className="form-select"
+                          >
+                            {fontOptions.map(font => (
+                              <option key={font.value} value={font.value}>{font.label}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="form-group">
+                          <label className="form-label">フォントサイズ</label>
+                          <input
+                            type="number"
+                            value={currentPattern.fields[selectedField].fontSize}
+                            onChange={(e) => updateFieldConfig(selectedField, { fontSize: parseInt(e.target.value) })}
+                            className="form-input"
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label className="form-label">色</label>
+                          <input
+                            type="color"
+                            value={currentPattern.fields[selectedField].color}
+                            onChange={(e) => updateFieldConfig(selectedField, { color: e.target.value })}
+                            className="form-input"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {currentPattern && selectedField && ['circlecut', 'storefront'].includes(selectedField) && (
+                      <div className="info-box">
+                        <h4 className="form-label">画像枠設定: {selectedField}</h4>
+                        <div className="form-group">
+                          <label className="form-label">幅</label>
+                          <input
+                            type="number"
+                            value={currentPattern.fields[selectedField].width}
+                            onChange={(e) => updateFieldConfig(selectedField, { width: parseInt(e.target.value) })}
+                            className="form-input"
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label className="form-label">高さ</label>
+                          <input
+                            type="number"
+                            value={currentPattern.fields[selectedField].height}
+                            onChange={(e) => updateFieldConfig(selectedField, { height: parseInt(e.target.value) })}
+                            className="form-input"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="divider"></div>
+
+                    <h3 className="form-label">マップ座標設定</h3>
+                    <p className="text-small">現在編集中: <strong style={{color: '#08224A'}}>{currentMap?.name}</strong></p>
+                    <div className="button-group" style={{marginTop: '12px'}}>
+                      <input
+                        type="text"
+                        placeholder="スペース番号 (例: あ-01)"
+                        value={currentSpaceNumber}
+                        onChange={(e) => setCurrentSpaceNumber(e.target.value)}
+                        className="form-input"
+                        style={{flex: 1}}
+                      />
+                      <button
+                        onClick={() => setMapMode(true)}
+                        className="button"
+                        style={{ 
+                          backgroundColor: mapMode ? '#361403' : '#08224A',
+                          color: 'white'
+                        }}
+                      >
+                        {mapMode ? '設定中' : '位置設定'}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="panel">
+                    <h2 className="panel-title">プレビュー</h2>
+                    {currentMap && currentMap.templateImage ? (
+                      <div className="canvas-container">
+                        <canvas
+                          ref={setupCanvasRef}
+                          onClick={mapMode ? handleMapClick : handleSetupCanvasClick}
+                        />
+                      </div>
+                    ) : (
+                      <p style={{color: '#999'}}>マップのテンプレート画像をアップロードしてください</p>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="content-grid">
+                  <div className="panel">
+                    <h2 className="panel-title">情報入力</h2>
+                    
+                    <div className="info-box">
+                      <label className="form-label">デザインパターンを選択</label>
+                      <select
+                        value={selectedPatternForUser}
+                        onChange={(e) => setSelectedPatternForUser(e.target.value)}
+                        className="form-select"
+                      >
+                        {designPatterns.map(pattern => (
+                          <option key={pattern.id} value={pattern.id}>{pattern.name}</option>
+                        ))}
+                      </select>
+                      <p className="text-small">💡 お好みのデザインを選んでください</p>
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">サークル名</label>
+                      <textarea
+                        value={userData.circleName}
+                        onChange={(e) => setUserData(prev => ({ ...prev, circleName: e.target.value }))}
+                        className="form-textarea"
+                        style={{minHeight: '60px'}}
+                        placeholder="改行する場合はEnterキーを押してください"
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">ニックネーム</label>
+                      <textarea
+                        value={userData.handleName}
+                        onChange={(e) => setUserData(prev => ({ ...prev, handleName: e.target.value }))}
+                        className="form-textarea"
+                        style={{minHeight: '60px'}}
+                        placeholder="改行する場合はEnterキーを押してください"
+                      />
+                    </div>
+
+                    <div className="content-section">
+                      <label className="form-label" style={{fontSize: '16px', marginBottom: '16px'}}>当日の内容</label>
+                      
+                      <div className="subsection">
+                        <p className="subsection-title">作品</p>
+                        <div className="checkbox-group indent">
+                          <label className="checkbox-label">
+                            <input
+                              type="checkbox"
+                              checked={userData.contentWork.illustration}
+                              onChange={(e) => setUserData(prev => ({
+                                ...prev,
+                                contentWork: { ...prev.contentWork, illustration: e.target.checked }
+                              }))}
+                            />
+                            イラスト
+                          </label>
+                          <label className="checkbox-label">
+                            <input
+                              type="checkbox"
+                              checked={userData.contentWork.manga}
+                              onChange={(e) => setUserData(prev => ({
+                                ...prev,
+                                contentWork: { ...prev.contentWork, manga: e.target.checked }
+                              }))}
+                            />
+                            漫画
+                          </label>
+                          <label className="checkbox-label">
+                            <input
+                              type="checkbox"
+                              checked={userData.contentWork.novel}
+                              onChange={(e) => setUserData(prev => ({
+                                ...prev,
+                                contentWork: { ...prev.contentWork, novel: e.target.checked }
+                              }))}
+                            />
+                            小説
+                          </label>
+                          <label className="checkbox-label">
+                            <input
+                              type="checkbox"
+                              checked={userData.contentWork.goods}
+                              onChange={(e) => setUserData(prev => ({
+                                ...prev,
+                                contentWork: { ...prev.contentWork, goods: e.target.checked }
+                              }))}
+                            />
+                            グッズ
+                          </label>
+                          <label className="checkbox-label">
+                            <input
+                              type="checkbox"
+                              checked={userData.contentWork.mailOrder}
+                              onChange={(e) => setUserData(prev => ({
+                                ...prev,
+                                contentWork: { ...prev.contentWork, mailOrder: e.target.checked }
+                              }))}
+                            />
+                            通販
+                          </label>
+                          <label className="checkbox-label">
+                            <input
+                              type="checkbox"
+                              checked={userData.contentWork.netprint}
+                              onChange={(e) => setUserData(prev => ({
+                                ...prev,
+                                contentWork: { ...prev.contentWork, netprint: e.target.checked }
+                              }))}
+                            />
+                            ネットプリント
+                          </label>
+                        </div>
+                      </div>
+
+                      <div className="subsection">
+                        <p className="subsection-title">傾向</p>
+                        <div className="checkbox-group indent">
+                          <label className="checkbox-label">
+                            <input
+                              type="checkbox"
+                              checked={userData.contentTendency.allGenre}
+                              onChange={(e) => setUserData(prev => ({
+                                ...prev,
+                                contentTendency: { ...prev.contentTendency, allGenre: e.target.checked }
+                              }))}
+                            />
+                            オールジャンル
+                          </label>
+                          <label className="checkbox-label">
+                            <input
+                              type="checkbox"
+                              checked={userData.contentTendency.yume}
+                              onChange={(e) => setUserData(prev => ({
+                                ...prev,
+                                contentTendency: { ...prev.contentTendency, yume: e.target.checked }
+                              }))}
+                            />
+                            夢
+                          </label>
+                          <label className="checkbox-label">
+                            <input
+                              type="checkbox"
+                              checked={userData.contentTendency.fu}
+                              onChange={(e) => setUserData(prev => ({
+                                ...prev,
+                                contentTendency: { ...prev.contentTendency, fu: e.target.checked }
+                              }))}
+                            />
+                            腐
+                          </label>
+                        </div>
+                      </div>
+
+                      <div className="subsection">
+                        <p className="subsection-title">取扱</p>
+                        <div className="checkbox-group indent">
+                          <label className="checkbox-label">
+                            <input
+                              type="checkbox"
+                              checked={userData.contentRating.allAges}
+                              onChange={(e) => setUserData(prev => ({
+                                ...prev,
+                                contentRating: { ...prev.contentRating, allAges: e.target.checked }
+                              }))}
+                            />
+                            全年齢のみ
+                          </label>
+                          <label className="checkbox-label">
+                            <input
+                              type="checkbox"
+                              checked={userData.contentRating.r18}
+                              onChange={(e) => setUserData(prev => ({
+                                ...prev,
+                                contentRating: { ...prev.contentRating, r18: e.target.checked }
+                              }))}
+                            />
+                            R18有り
+                          </label>
+                        </div>
+                      </div>
+
+                      <div>
+                        <p className="subsection-title">詳細(フリースペース)</p>
+                        <textarea
+                          value={userData.contentFreeText}
+                          onChange={(e) => setUserData(prev => ({ ...prev, contentFreeText: e.target.value }))}
+                          placeholder="頒布物の詳細を自由に記載できます"
+                          className="form-textarea"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="info-box">
+                      <label className="form-label">会場マップを選択</label>
+                      <select
+                        value={selectedMapForUser}
+                        onChange={(e) => setSelectedMapForUser(e.target.value)}
+                        className="form-select"
+                      >
+                        {maps.map(map => (
+                          <option key={map.id} value={map.id}>{map.name}</option>
+                        ))}
+                      </select>
+                      <p className="text-small">🗺️ あなたのスペースがあるマップを選んでください</p>
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">スペース番号</label>
+                      <input
+                        type="text"
+                        placeholder="例:あ1"
+                        value={userData.spaceNumber}
+                        onChange={(e) => setUserData(prev => ({ ...prev, spaceNumber: e.target.value }))}
+                        className="form-input"
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">当日は会場に居ますか?</label>
+                      <div className="radio-group">
+                        <label className="radio-label">
+                          <input
+                            type="radio"
+                            value="yes"
+                            checked={userData.isAttending === 'yes'}
+                            onChange={(e) => setUserData(prev => ({ ...prev, isAttending: e.target.value }))}
+                          />
+                          いる
+                        </label>
+                        <label className="radio-label">
+                          <input
+                            type="radio"
+                            value="no"
+                            checked={userData.isAttending === 'no'}
+                            onChange={(e) => setUserData(prev => ({ ...prev, isAttending: e.target.value }))}
+                          />
+                          いない
+                        </label>
+                      </div>
+                      {userData.isAttending === 'yes' && (
+                        <input
+                          type="text"
+                          placeholder="時間帯 (例: 11:00-15:00)"
+                          value={userData.attendanceTime}
+                          onChange={(e) => setUserData(prev => ({ ...prev, attendanceTime: e.target.value }))}
+                          className="form-input"
+                          style={{marginTop: '8px'}}
+                        />
+                      )}
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">サークルカット</label>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleUserImageUpload(e, 'circlecutImage')}
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">店舗外観</label>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleUserImageUpload(e, 'storefrontImage')}
+                      />
+                    </div>
+
+                    <div className="info-box">
+                      <label className="form-label">画像形式</label>
+                      <div className="radio-group">
+                        <label className="radio-label">
+                          <input
+                            type="radio"
+                            value="png"
+                            checked={imageFormat === 'png'}
+                            onChange={(e) => setImageFormat(e.target.value)}
+                          />
+                          PNG (高画質)
+                        </label>
+                        <label className="radio-label">
+                          <input
+                            type="radio"
+                            value="jpeg"
+                            checked={imageFormat === 'jpeg'}
+                            onChange={(e) => setImageFormat(e.target.value)}
+                          />
+                          JPEG (軽量)
+                        </label>
+                      </div>
+                    </div>
+
+                    <div style={{backgroundColor: '#dbeafe', border: '1px solid #93c5fd', borderRadius: '6px', padding: '12px', marginBottom: '16px'}}>
+                      <p style={{color: '#4b5563', fontSize: '14px'}}>
+                        💡 プレビューを確認して問題なければダウンロードしてください
+                      </p>
+                    </div>
+
+                    <button onClick={downloadCard} className="button button-secondary button-full">
+                      📥 カードをダウンロード
+                    </button>
+                  </div>
+
+                  <div className="panel">
+                    <h2 className="panel-title">プレビュー</h2>
+                    {maps.find(m => m.id === selectedMapForUser)?.templateImage ? (
+                      <div className="canvas-container">
+                        <canvas ref={canvasRef} />
+                      </div>
+                    ) : (
+                      <p style={{color: '#999'}}>設定ファイルを読み込んでください</p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        };
+
+        ReactDOM.render(<EventCardGenerator />, document.getElementById('root'));
+    </script>
+</body>
+</html>
